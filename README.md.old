@@ -1,0 +1,81 @@
+# AI Karyashala - Certificate Generation Portal
+
+A premium, web-based application designed to generate high-resolution, personalized certificates and ID cards for the **AI Karyashala** bootcamp at KIET.
+
+## 🌟 Features
+
+-   **Student Authentication**: Secure login using Roll Number and Password (validated against `students.csv`).
+-   **Photo Processing**: Built-in image cropper to ensure perfect passport-size photos for the ID card.
+-   **High-Resolution Output**: Generates **A4 Landscape (3508 x 2480 px @ 300 DPI)** certificates suitable for high-quality printing.
+-   **Dynamic ID Card**: Automatically generates a student ID card on the certificate with:
+    -   Student Photo
+    -   QR Code (links to a digital verification URL)
+    -   **Smart Text Fitting**: Automatically adjusts font size and wraps text for long names to fit perfectly.
+-   **Bilingual Support**: Instant toggle between **English** and **Telugu** (తెలుగు) with proper font rendering ('Tiro Telugu').
+-   **Modern UI**: Features a "Glassmorphism" design aesthetic with responsive layouts.
+
+## 🛠️ Tech Stack
+
+-   **Frontend**: HTML5, CSS3 (Custom Glass UI), JavaScript (ES6+)
+-   **Libraries**:
+    -   `Cropper.js`: For image cropping and editing.
+    -   `PapaParse`: For parsing the student database (CSV).
+    -   `QRCode.js`: For generating dynamic QR codes.
+    -   `Google Fonts`: Outfit, Playfair Display, Tiro Telugu.
+
+## 🚀 Setup & Installation
+
+Due to browser security policies regarding local file access (CORS), this application **must run on a local web server** and cannot be opened directly by double-clicking `index.html`.
+
+### Prerequisites
+-   Example: **Python** (usually pre-installed on most systems) or VS Code Live Server.
+
+### Steps
+1.  **Clone or Download** this repository.
+2.  **Prepare Data**: Ensure `students.csv` is in the root folder with the following columns:
+    ```csv
+    student_id,student_name,rollno,password
+    AIK070627,CHAITANYA PENTAKOTA,70627,aikaryashala
+    ```
+3.  **Start Local Server**:
+    -   Open a terminal/command prompt in the project folder.
+    -   Run:
+        ```bash
+        python -m http.server
+        ```
+4.  **Access the App**:
+    -   Open your browser and go to: `http://localhost:8000`
+
+## 📖 Usage Guide
+
+1.  **Login**: Enter your Name, Roll Number, and Password as defined in the CSV.
+2.  **Upload Photo**:
+    -   Select a photo from your device.
+    -   Use the cropping tool to frame your face (Standard Passport Ratio).
+    -   Click **Save Photo**.
+3.  **Generate**:
+    -   Click **Generate Certificate**.
+    -   The system generates the high-res composite image.
+4.  **Customize**:
+    -   Use the **"Switch to Telugu"** button to toggle the language.
+5.  **Download**:
+    -   Click **Download High-Res (JPG)** to save the final file.
+
+## 📂 Project Structure
+
+```
+.
+├── assets/
+│   ├── css/
+│   │   └── style.css          # Main stylesheet
+│   ├── js/
+│   │   ├── main.js            # UI logic, navigation, and events
+│   │   └── certificate-renderer.js  # Canvas rendering engine (The Brain)
+│   └── signature.png          # Coordinator signature asset
+├── index.html                 # Main application interface
+├── students.csv               # Student database
+└── README.md                  # This documentation
+```
+
+## 📄 License
+This project is created for internal use at **KIET College, Kakinada**.
