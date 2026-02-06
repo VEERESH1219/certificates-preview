@@ -49,17 +49,24 @@
             console.log('[Renderer]', msg);
         }
 
-        // Wait for fonts to load
+        // Wait for fonts to load (all weights used by the certificate renderer)
+        // These are variable fonts — same woff2 covers all weights, but each
+        // weight must be registered separately so the browser uses the real
+        // weight axis instead of synthesizing faux-bold.
         async function waitForFonts() {
             setStatus('Loading fonts...');
-            await document.fonts.ready;
 
-            // Explicitly load the fonts we need
             const fontsToLoad = [
-                new FontFace('UnifrakturCook', 'url(https://fonts.gstatic.com/s/unifrakturcook/v23/IurA6Yli8YOdcoky-0PTTdkm56n05Yw.woff2)'),
-                new FontFace('Cormorant Garamond', 'url(https://fonts.gstatic.com/s/cormorantgaramond/v16/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYrEtFmQ.woff2)'),
-                new FontFace('Montserrat', 'url(https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Hw5aXo.woff2)'),
-                new FontFace('Outfit', 'url(https://fonts.gstatic.com/s/outfit/v11/QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1C4G-EiAou6Y.woff2)')
+                new FontFace('UnifrakturCook', 'url(https://fonts.gstatic.com/s/unifrakturcook/v25/IurA6Yli8YOdcoky-0PTTdkm56n05Xwy1oM.woff2)', { weight: '700' }),
+                new FontFace('Cormorant Garamond', 'url(https://fonts.gstatic.com/s/cormorantgaramond/v21/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtK.woff2)', { weight: '400' }),
+                new FontFace('Cormorant Garamond', 'url(https://fonts.gstatic.com/s/cormorantgaramond/v21/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtK.woff2)', { weight: '700' }),
+                new FontFace('Cormorant Garamond', 'url(https://fonts.gstatic.com/s/cormorantgaramond/v21/co3smX5slCNuHLi8bLeY9MK7whWMhyjYrGFEsdtdc62E6zd58jD-iNM8.woff2)', { weight: '400', style: 'italic' }),
+                new FontFace('Montserrat', 'url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2)', { weight: '400' }),
+                new FontFace('Montserrat', 'url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2)', { weight: '600' }),
+                new FontFace('Montserrat', 'url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2)', { weight: '700' }),
+                new FontFace('Outfit', 'url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtq.woff2)', { weight: '400' }),
+                new FontFace('Outfit', 'url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtq.woff2)', { weight: '600' }),
+                new FontFace('Outfit', 'url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtq.woff2)', { weight: '700' }),
             ];
 
             for (const font of fontsToLoad) {
@@ -71,6 +78,7 @@
                 }
             }
 
+            await document.fonts.ready;
             setStatus('Fonts loaded');
         }
 

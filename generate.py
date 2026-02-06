@@ -144,6 +144,16 @@ def generate_certificates(students, args, project_dir):
         if not students:
             print(f"Error: Student {args.student} not found")
             return
+    elif args.batch_size:
+        total = len(students)
+        start = (args.batch - 1) * args.batch_size
+        end = start + args.batch_size
+        total_batches = (total + args.batch_size - 1) // args.batch_size
+        students = students[start:end]
+        if not students:
+            print(f"Error: Batch {args.batch} is empty (only {total_batches} batches of {args.batch_size})")
+            return
+        print(f"Batch {args.batch}/{total_batches} (students {start+1}-{start+len(students)} of {total})")
 
     print(f"Processing {len(students)} student(s)...")
 
@@ -157,6 +167,8 @@ def generate_certificates(students, args, project_dir):
         page.goto(render_url)
         page.wait_for_function("window.rendererReady === true")
         print("Renderer ready")
+
+        batch_images = []
 
         for i, student in enumerate(students):
             print(f"\n[{i+1}/{len(students)}] Processing: {student['student_name']} ({student['rollno']})")
@@ -214,7 +226,6 @@ def generate_certificates(students, args, project_dir):
             if args.all or args.pdfs:
                 pdf_path = pdfs_dir / f"{student['rollno']}.pdf"
                 try:
-                    # Use Pillow to create PDF directly from PNG
                     with Image.open(png_path) as img:
                         # Convert to RGB if necessary (PNG might have alpha)
                         if img.mode in ('RGBA', 'P'):
@@ -225,14 +236,15 @@ def generate_certificates(students, args, project_dir):
                                 rgb_img.paste(img)
                             img = rgb_img
 
-                        # A4 landscape at 300 DPI: 297mm x 210mm = 3508 x 2480 pixels
-                        # Save as PDF
+                        # A4 landscape at 300 DPI
                         img.save(
                             str(pdf_path),
                             'PDF',
                             resolution=300.0,
                             save_all=True
                         )
+                        # Collect for combined PDF
+                        batch_images.append(img.copy())
                     print(f"  Saved PDF: {pdf_path}")
                 except Exception as e:
                     print(f"  Error generating PDF: {e}")
@@ -269,6 +281,24 @@ def generate_certificates(students, args, project_dir):
 
         browser.close()
 
+    # Save combined batch PDF
+    if batch_images and (args.all or args.pdfs):
+        if args.batch_size:
+            combined_name = f"batch-{args.batch}.pdf"
+        else:
+            combined_name = "all-certificates.pdf"
+        combined_path = pdfs_dir / combined_name
+        first = batch_images[0]
+        rest = batch_images[1:]
+        first.save(
+            str(combined_path),
+            'PDF',
+            resolution=300.0,
+            save_all=True,
+            append_images=rest
+        )
+        print(f"\n  Combined PDF ({len(batch_images)} certificates): {combined_path}")
+
     print(f"\nGeneration complete!")
     print(f"  PDFs: {pdfs_dir}")
     print(f"  Pages: {output_dir}")
@@ -281,8 +311,8 @@ def main():
         epilog="""
 Examples:
   python generate.py --all
-  python generate.py --pdfs
-  python generate.py --pages
+  python generate.py --pdfs --batch-size 20 --batch 1
+  python generate.py --pdfs --batch-size 50 --batch 3
   python generate.py --student AIK24B21
         """
     )
@@ -303,6 +333,10 @@ Examples:
                         help='Path to students CSV file (default: students.csv)')
     parser.add_argument('--keep-png', action='store_true',
                         help='Keep temporary PNG files')
+    parser.add_argument('--batch-size', type=int,
+                        help='Number of students per batch')
+    parser.add_argument('--batch', type=int, default=1,
+                        help='Batch number to process (1-indexed, default: 1)')
 
     args = parser.parse_args()
 
