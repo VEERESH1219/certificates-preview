@@ -384,14 +384,14 @@
             align-items: center;
             margin-top: 4px;
         }
-        
+
         .result__hashtags-label {
             font-size: 0.78rem;
             color: var(--text-muted);
             font-weight: 600;
             letter-spacing: 0.03em;
         }
-        
+
         .hashtag {
             display: inline-block;
             background: rgba(99, 102, 241, 0.12);
@@ -404,7 +404,7 @@
             user-select: all;
             transition: background 0.2s;
         }
-        
+
         .hashtag:hover {
             background: rgba(99, 102, 241, 0.22);
         }
@@ -660,11 +660,11 @@
                     <span class="result__url" id="result-url"></span>
                 </div>
                 <div class="result__hashtags" style="margin-bottom:12px;">
-                                <span class="result__hashtags-label">Share with:</span>
-                                <span class="hashtag">#AIKaryashala</span>
-                                <span class="hashtag">#Bootcamp</span>
-                                <span class="hashtag">#KIET</span>
-                                <span class="hashtag">#Kakinada</span>
+                    <span class="result__hashtags-label">Share with:</span>
+                    <span class="hashtag">#AIKaryashala</span>
+                    <span class="hashtag">#Bootcamp</span>
+                    <span class="hashtag">#KIET</span>
+                    <span class="hashtag">#Kakinada</span>
                 </div>
                 <div class="result__actions">
                     <button class="btn btn--primary btn--sm" id="btn-copy">
@@ -674,6 +674,13 @@
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                         </svg>
                         Copy Link
+                    </button>
+                    <button class="btn btn--secondary btn--sm" id="btn-download">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                        </svg>
+                        Download Image
                     </button>
                     <a class="btn btn--primary btn--sm" id="btn-open" href="#" target="_blank" rel="noopener">
                         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
@@ -946,7 +953,7 @@
             /* ── Show result ────────────────────────────────── */
             /* ── Hashtags for sharing ────────────────────────── */
             const SHARE_HASHTAGS = ['#AIKaryashala', '#Bootcamp', '#KIET', '#Kakinada'];
-            
+
             function showResult(id) {
                 hideAll();
                 const url = fullUrl(id);
@@ -955,10 +962,10 @@
                 $url.textContent = url;
                 $btnOpen.href = path;
                 $btnReport.href = reportUrl(id);
-                
+
                 // Use offsite share so LinkedIn fetches OG tags and shows the full preview card.
                 $btnLinkedIn.href = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url);
-               
+
 
                 $iframe.src = path;
                 $iframeLoad.classList.remove('hidden');
@@ -978,13 +985,16 @@
             });
 
             /* ── Copy Link ──────────────────────────────────── */
-            async function copyLink() {
+            function getShareText() {
                 const url = $url.textContent;
-                const shareText = url + '\n\n' + SHARE_HASHTAGS.join(' ');
+                return url + '\n\n' + SHARE_HASHTAGS.join(' ');
+            }
+
+            async function copyLink() {
+                const shareText = getShareText();
                 try {
                     await navigator.clipboard.writeText(shareText);
                 } catch {
-                    // Fallback
                     const ta = document.createElement('textarea');
                     ta.value = shareText;
                     ta.style.cssText = 'position:fixed;left:-9999px';
@@ -993,26 +1003,72 @@
                     document.execCommand('copy');
                     document.body.removeChild(ta);
                 }
-                // Toast
+                showToast('Link + hashtags copied!');
+            }
+
+            /* ── Download Image ─────────────────────────────── */
+            async function downloadImage() {
+                const id = $id.value.toUpperCase();
+                // Construct the preview image URL
+                // We use the same base path strategy as certUrl()
+                let imgUrl;
+                if (location.protocol === 'file:') {
+                    imgUrl = '../' + encodeURIComponent(id) + '/preview.jpg';
+                } else {
+                    imgUrl = BASE_CERT_PATH + encodeURIComponent(id) + '/preview.jpg';
+                }
+
+                try {
+                    // Fetch as blob to force download
+                    const response = await fetch(imgUrl);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `${id}-certificate.jpg`;
+                    document.body.appendChild(a);
+                    a.click();
+
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    showToast('Image downloaded!');
+                } catch (error) {
+                    console.error('Download failed:', error);
+                    // Fallback to opening in new tab
+                    window.open(imgUrl, '_blank');
+                }
+            }
+
+            /* ── Toast Helper ───────────────────────────────── */
+            function showToast(msg) {
+                $toast.textContent = msg;
                 $toast.classList.add('show');
                 clearTimeout(toastTimer);
                 toastTimer = setTimeout(() => $toast.classList.remove('show'), 2000);
             }
 
-            /* ── Query-param auto-preview ───────────────────── */
-            async function autoPreviewFromQuery() {
-                const params = new URLSearchParams(location.search);
-                const qid = (params.get('id') || '').toUpperCase().trim();
-                if (qid && INPUT_PATTERN.test(qid)) {
-                    $id.value = qid;
-                    await loadIndexPromise;
-                    handlePreview();
-                }
-            }
-
             /* ── Event listeners ────────────────────────────── */
             $btnPrev.addEventListener('click', () => handlePreview());
             $btnCopy.addEventListener('click', copyLink);
+
+            // New Download Button
+            document.getElementById('btn-download').addEventListener('click', downloadImage);
+
+            // LinkedIn Share: Copy text first, then open LinkedIn
+            $btnLinkedIn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await copyLink();
+                setTimeout(() => {
+                    // Open LinkedIn share (we still use the URL param just in case)
+                    // But now the user has the text in clipboard to paste
+                    const linkedinUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(fullUrl($id.value.toUpperCase()));
+                    window.open(linkedinUrl, '_blank');
+                }, 500);
+            });
 
             // Enter key submits
             $id.addEventListener('keydown', (e) => {
